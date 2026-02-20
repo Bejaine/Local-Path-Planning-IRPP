@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="dwa_demo_world">
+
+    <!-- Lighting -->
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+
+    <!-- Physics -->
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+    </physics>
+
+    <!-- ── Static wall obstacles ──────────────────────────────────────── -->
+
+    <!-- Box obstacle 1 -->
+    <model name="box_1">
+      <static>true</static>
+      <pose>2.0 0.5 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.5 0.5 0.5</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>0.5 0.5 0.5</size></box></geometry>
+          <material><ambient>0.8 0.4 0.1 1</ambient><diffuse>0.8 0.4 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Box obstacle 2 -->
+    <model name="box_2">
+      <static>true</static>
+      <pose>-1.5 1.0 0.25 0 0 0.5</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.6 0.3 0.5</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>0.6 0.3 0.5</size></box></geometry>
+          <material><ambient>0.8 0.4 0.1 1</ambient><diffuse>0.8 0.4 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Cylinder obstacle 1 -->
+    <model name="cyl_1">
+      <static>true</static>
+      <pose>1.0 -1.5 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.2</radius><length>0.5</length></cylinder></geometry></collision>
+        <visual name="vis">
+          <geometry><cylinder><radius>0.2</radius><length>0.5</length></cylinder></geometry>
+          <material><ambient>0.2 0.7 0.2 1</ambient><diffuse>0.2 0.7 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Cylinder obstacle 2 -->
+    <model name="cyl_2">
+      <static>true</static>
+      <pose>-0.5 -1.0 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.18</radius><length>0.5</length></cylinder></geometry></collision>
+        <visual name="vis">
+          <geometry><cylinder><radius>0.18</radius><length>0.5</length></cylinder></geometry>
+          <material><ambient>0.2 0.7 0.2 1</ambient><diffuse>0.2 0.7 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Narrow corridor walls -->
+    <model name="wall_left">
+      <static>true</static>
+      <pose>3.0 0.8 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>2.0 0.1 0.5</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>2.0 0.1 0.5</size></box></geometry>
+          <material><ambient>0.5 0.5 0.9 1</ambient></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_right">
+      <static>true</static>
+      <pose>3.0 -0.8 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>2.0 0.1 0.5</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>2.0 0.1 0.5</size></box></geometry>
+          <material><ambient>0.5 0.5 0.9 1</ambient></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
