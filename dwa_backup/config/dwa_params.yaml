@@ -1,0 +1,29 @@
+/**:
+  ros__parameters:
+    # ── Robot kinematic limits (TurtleBot3 Burger) ──────────────────────
+    max_speed:          0.22    # [m/s]  hardware limit
+    min_speed:         -0.05    # [m/s]  allow slight reversing for recovery
+    max_yaw_rate:       2.84    # [rad/s]
+    max_accel:          0.5     # [m/s²]   longitudinal acceleration limit
+    max_dyaw_rate:      3.2     # [rad/s²] angular acceleration limit
+
+    # ── Sampling resolution ──────────────────────────────────────────────
+    # Finer resolution → better solution quality, higher CPU cost
+    v_resolution:       0.02    # [m/s]
+    yaw_rate_resolution: 0.1    # [rad/s]
+
+    # ── Simulation horizon ───────────────────────────────────────────────
+    predict_time:       3.0     # [s]  longer → smoother but slower
+    control_period:     0.1     # [s]  10 Hz control loop
+
+    # ── Cost function weights ────────────────────────────────────────────
+    # Increase heading_cost_gain  → robot tracks desired direction more tightly
+    # Increase dist_cost_gain     → robot stays further from obstacles
+    # Increase velocity_cost_gain → robot prefers faster motion
+    heading_cost_gain:  0.15
+    dist_cost_gain:     1.0
+    velocity_cost_gain: 1.0
+
+    # ── Safety thresholds ────────────────────────────────────────────────
+    robot_radius:         0.22  # [m]  physical + safety margin
+    obstacle_cost_radius: 0.5   # [m]  start penalising beyond hard radius
