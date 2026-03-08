@@ -18,7 +18,7 @@ How it works:
 Subscriptions:
   /scan          – LaserScan  (obstacle distances)
   /odom          – Odometry   (current pose & velocity)
-  /goal_velocity – Twist      (desired velocity direction from operator)
+  /goal_pose     – PoseStamped (desired destination pose)
 
 Publications:
   /cmd_vel                    – Twist  (commanded velocity)
@@ -30,7 +30,7 @@ import math
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist, TwistStamped
+from geometry_msgs.msg import Twist, TwistStamped, Vector3, PoseStamped
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
 from visualization_msgs.msg import Marker, MarkerArray
@@ -73,7 +73,7 @@ class MPPIPlannerNode(Node):
         self.scan_ranges: list[float] = []
         self.scan_angle_min = 0.0
         self.scan_angle_increment = 0.0
-        self.goal_velocity = Twist()          # desired vx / omega from operator
+        self.goal_pose = None
         self.odom_received = False
         self.scan_received = False
 
@@ -100,7 +100,7 @@ class MPPIPlannerNode(Node):
                                  self._scan_callback, 10)
         self.create_subscription(Odometry, '/odom',
                                  self._odom_callback, 10)
-        self.create_subscription(Twist, '/goal_velocity',
+        self.create_subscription(PoseStamped, '/goal_pose',
                                  self._goal_callback, 10)
 
         # ------------------------------------------------------------------ #
@@ -131,12 +131,12 @@ class MPPIPlannerNode(Node):
             'predict_time':        3.0,    # [s]
             'control_period':      0.1,    # [s]  10 Hz
             # Cost weights  (all non-negative; tune to taste)
-            'heading_cost_gain':   0.15,
-            'dist_cost_gain':      1.0,
+            'heading_cost_gain':   1.0,
+            'dist_cost_gain':      2.0,
             'velocity_cost_gain':  1.0,
             # Safety
             'robot_radius':        0.22,   # [m]  burger radius ≈ 0.105 m; add margin
-            'obstacle_cost_radius':0.5,    # [m]  start penalising within this range
+            'obstacle_cost_radius':1.5,    # [m]  start penalising within this range
         }
         for name, value in defaults.items():
             self.declare_parameter(name, value)
@@ -166,8 +166,8 @@ class MPPIPlannerNode(Node):
         self.state.omega = msg.twist.twist.angular.z
         self.odom_received = True
 
-    def _goal_callback(self, msg: Twist):
-        self.goal_velocity = msg
+    def _goal_callback(self, msg: PoseStamped):
+        self.goal_pose = msg
 
     # ======================================================================= #
     # Main control loop                                                        #
@@ -177,7 +177,7 @@ class MPPIPlannerNode(Node):
             return
 
         # If zero goal, stay perfectly still and skip evaluation
-        if abs(self.goal_velocity.linear.x) < 0.01 and abs(self.goal_velocity.angular.z) < 0.01:
+        if self.goal_pose is None:
             cmd = TwistStamped()
             cmd.header.stamp = self.get_clock().now().to_msg()
             cmd.header.frame_id = 'base_footprint'
@@ -263,11 +263,13 @@ class MPPIPlannerNode(Node):
         r_penalty = p('obstacle_cost_radius')
         
         # Goal parameters
-        gv = self.goal_velocity
-        target_v = gv.linear.x
-        target_w = gv.angular.z
-        predict_time = p('predict_time')
-        desired_yaw = self.state.yaw + (target_w * predict_time)
+        if self.goal_pose is not None:
+            desired_yaw = math.atan2(self.goal_pose.pose.position.y - self.state.y,
+                                     self.goal_pose.pose.position.x - self.state.x)
+        else:
+            desired_yaw = self.state.yaw
+        # Try to go at max speed in the requested direction
+        target_v = p('max_speed')
         
         for k in range(K):
             traj = []
@@ -310,7 +312,7 @@ class MPPIPlannerNode(Node):
                 cost_k += p('velocity_cost_gain') * (abs(target_v - avg_v) / p('max_speed'))
                 
             # Stop condition strongly overrides
-            if abs(target_v) < 0.01 and abs(target_w) < 0.01:
+            if self.goal_pose is None:
                 cost_k += abs(avg_v) / 0.1
                 
             costs[k] = cost_k
@@ -403,7 +405,8 @@ def main(args=None):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
